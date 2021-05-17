@@ -1,12 +1,27 @@
 package com.example.atgandroid.repository
 
-import com.example.atgandroid.api.RetrofitInstance
-import com.example.atgandroid.model.Images
-import com.example.atgandroid.model.PhotoModel
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import com.example.atgandroid.api.FlickrApi
+import com.example.atgandroid.model.FlickrImage
+import com.example.atgandroid.model.Photo
+import com.example.atgandroid.model.Photos
+import kotlinx.coroutines.flow.Flow
 import retrofit2.Response
 
 class Repository {
-    suspend fun getImages(method: String, per_page: Int, page: Int, api_key: String, format: String, nojsoncallback: Int, extras: String): Response<PhotoModel> {
-        return RetrofitInstance.api.getImages(method, per_page, page, api_key, format, nojsoncallback, extras)
+    private val flickrApi = FlickrApi()
+
+    fun getImages (): Flow<PagingData<Photo>> {
+        return Pager(
+                config = PagingConfig(pageSize = 20, enablePlaceholders = true),
+                pagingSourceFactory = { DataSource() }
+        ).flow
+    }
+
+    suspend fun getSearch(method: String, api_key: String, format: String, nojsoncallback: Int, extras: String, text: String):
+            Response<FlickrImage> {
+        return flickrApi.getSearch(method, api_key, format, nojsoncallback, extras, text)
     }
 }

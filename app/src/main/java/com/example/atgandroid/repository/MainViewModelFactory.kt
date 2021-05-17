@@ -6,6 +6,10 @@ import com.example.atgandroid.MainViewModel
 
 class MainViewModelFactory(private val repository: Repository): ViewModelProvider.Factory {
     override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-        return MainViewModel(repository) as T
+        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MainViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel Class")
     }
 }

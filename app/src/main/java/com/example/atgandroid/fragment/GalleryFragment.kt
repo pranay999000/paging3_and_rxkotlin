@@ -1,22 +1,30 @@
 package com.example.atgandroid.fragment
 
-import android.content.Context
 import android.os.Bundle
+import android.view.*
 import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
+import androidx.navigation.ui.NavigationUI
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.atgandroid.MainViewModel
+import com.example.atgandroid.R
+import com.example.atgandroid.adapter.Adapter
 import com.example.atgandroid.adapter.ImageAdapter
 import com.example.atgandroid.databinding.FragmentGalleryBinding
-import com.example.atgandroid.model.ImageGridModel
+import com.example.atgandroid.model.Photo
 import com.example.atgandroid.repository.MainViewModelFactory
 import com.example.atgandroid.repository.Repository
+import kotlinx.android.synthetic.main.fragment_gallery.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 class GalleryFragment : Fragment() {
 
@@ -33,34 +41,45 @@ class GalleryFragment : Fragment() {
                               savedInstanceState: Bundle?): View? {
         val binding: FragmentGalleryBinding = FragmentGalleryBinding.inflate(inflater, container, false)
 
+        setHasOptionsMenu(true)
+
         val gridLayoutManager: GridLayoutManager?
-        val imageList: ArrayList<ImageGridModel> = ArrayList()
-        val imageAdapter: ImageAdapter = ImageAdapter(context, imageList)
+        val imageList: ArrayList<Photo> = ArrayList()
+        val imageAdapter = ImageAdapter()
 
         gridLayoutManager = GridLayoutManager(context, 3, GridLayoutManager.VERTICAL, false)
         binding.imageRecyclerView.layoutManager = gridLayoutManager
         binding.imageRecyclerView.setHasFixedSize(true)
-        binding.imageRecyclerView.adapter =imageAdapter
-
+        binding.imageRecyclerView.adapter = imageAdapter.withLoadStateHeaderAndFooter(
+                header = Adapter { imageAdapter.retry() },
+                footer = Adapter { imageAdapter.retry() }
+        )
 
         val repository = Repository()
         val viewModelFactory = MainViewModelFactory(repository)
-        viewModel = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
-
-        viewModel.getFlickrImages("flickr.photos.getRecent", 20, 1, "6f102c62f41998d151e5a1b48713cf13", "json", 1, "url_s")
-        viewModel.images.observe(viewLifecycleOwner, Observer { response ->
-            if (response.isSuccessful) {
-
-                response.body()?.getPhotoModel()?.getPhotoList()?.forEach {
-                    imageList.add(ImageGridModel(it.url_s.toString(), it.title.toString()))
-                }
-
-                imageAdapter.notifyDataSetChanged()
-            } else {
-                Toast.makeText(context, response.code(), Toast.LENGTH_SHORT).show()
+        viewModel  = ViewModelProvider(this, viewModelFactory).get(MainViewModel::class.java)
+        viewModel.getModelImages()
+        lifecycleScope.launch {
+            viewModel.getModelImages().collectLatest { pageData ->
+                imageAdapter.submitData(pageData)
             }
-        })
+        }
+
+//        lifecycleScope.launch {
+//            imageAdapter.loadStateFlow.distinctUntilChangedBy { it.refresh }
+//                    .filter { it.refresh is LoadState.NotLoading }
+//                    .collect { binding.imageRecyclerView.scrollToPosition(0) }
+//        }
 
         return binding.root
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.gallery_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return NavigationUI.onNavDestinationSelected(item, view?.findNavController()!!) || super.onOptionsItemSelected(item)
     }
 }

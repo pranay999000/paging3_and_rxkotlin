@@ -1,38 +1,32 @@
 package com.example.atgandroid.adapter
 
-import android.content.Context
-import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.findNavController
+import androidx.paging.PagingDataAdapter
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.example.atgandroid.databinding.ImageItemBinding
-import com.example.atgandroid.fragment.GalleryFragmentDirections
-import com.example.atgandroid.model.ImageGridModel
+import com.example.atgandroid.model.Photo
 
-class ImageAdapter(private var context: Context?, private var list: ArrayList<ImageGridModel>): RecyclerView.Adapter<ImageAdapter.ViewHolder>() {
+class ImageAdapter: PagingDataAdapter<Photo, RecyclerView.ViewHolder>(COMPARATOR) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val images = getItem(position)
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ImageItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding)
+        (holder as ImagesViewHolder).bind(images)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return ImagesViewHolder.create(parent)
+    }
+}
 
-        with (holder) {
-            with (list[position]) {
-                Glide.with(context!!).load(image).into(binding.imageView)
-                binding.imageView.setOnClickListener { view: View ->
-                    view.findNavController().navigate(GalleryFragmentDirections.actionGalleryFragmentToImageFragment(image, title))
-                }
-            }
-        }
+
+private val COMPARATOR = object : DiffUtil.ItemCallback<Photo>() {
+    override fun areItemsTheSame(oldItem: Photo, newItem: Photo): Boolean {
+        // TODO: Change to ID
+        return oldItem.id == newItem.id
     }
 
-    override fun getItemCount(): Int {
-        return list.size
+    override fun areContentsTheSame(oldItem: Photo, newItem: Photo): Boolean {
+        return oldItem == newItem
     }
 
-    inner class ViewHolder(val binding: ImageItemBinding): RecyclerView.ViewHolder(binding.root)
 }

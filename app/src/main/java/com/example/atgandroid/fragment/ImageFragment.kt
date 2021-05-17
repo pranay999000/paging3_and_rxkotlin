@@ -5,9 +5,8 @@ import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
 import android.view.ScaleGestureDetector.SimpleOnScaleGestureListener
-import android.widget.Toast
+import androidx.navigation.ui.NavigationUI
 import com.bumptech.glide.Glide
-import com.example.atgandroid.R
 import com.example.atgandroid.databinding.FragmentImageBinding
 import java.lang.Float.max
 import java.lang.Float.min
@@ -31,7 +30,7 @@ class ImageFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentImageBinding.inflate(inflater, container, false)
 
-        var args = ImageFragmentArgs.fromBundle(requireArguments())
+        val args = ImageFragmentArgs.fromBundle(requireArguments())
         context?.let { Glide.with(it).load(args.image).into(binding.image) }
 
         scaleGestureDetector = ScaleGestureDetector(context, ScaleListener())

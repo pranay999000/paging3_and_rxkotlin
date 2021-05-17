@@ -26,4 +26,13 @@
             android:name="title"
             app:argType="string" />
     </fragment>
+    <fragment
+        android:id="@+id/searchFragment"
+        android:name="com.example.atgandroid.fragment.SearchFragment"
+        android:label="Search"
+        tools:layout="@layout/fragment_search" >
+        <action
+            android:id="@+id/action_searchFragment_to_imageFragment"
+            app:destination="@id/imageFragment" />
+    </fragment>
 </navigation>
